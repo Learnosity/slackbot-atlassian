@@ -10,8 +10,9 @@ import (
 
 const ENV_VAR = "CONFIG"
 
-type MessageMatch struct {
+type MessageTrigger struct {
 	SlackChannel  string            `json:"slack_channel"`
+	SlackUserKey  string            `json:"slack_user_key"`
 	Match         map[string]string `json:"match"`
 	matchCompiled map[string]*regexp.Regexp
 }
@@ -36,13 +37,20 @@ type SlackConfig struct {
 	Auth       struct {
 		Token string `json:"token"`
 	} `json:"auth"`
+	Users map[string]SlackUser `json:"users"`
+}
+
+type SlackUser struct {
+	Name      string `json:"name"`
+	IconUrl   string `json:"icon_url"`
+	IconEmoji string `json:"icon_emoji"`
 }
 
 type Config struct {
-	State     StateConfig     `json:"state"`
-	Atlassian AtlassianConfig `json:"atlassian"`
-	Slack     SlackConfig     `json:"slack"`
-	Matches   []MessageMatch  `json:"matches"`
+	State     StateConfig      `json:"state"`
+	Atlassian AtlassianConfig  `json:"atlassian"`
+	Slack     SlackConfig      `json:"slack"`
+	Triggers  []MessageTrigger `json:"triggers"`
 }
 
 func LoadConfig(input io.Reader) (*Config, error) {
@@ -55,14 +63,14 @@ func LoadConfig(input io.Reader) (*Config, error) {
 	}
 
 	// Compile the match regular expression
-	for _, m := range cfg.Matches {
-		m.matchCompiled = make(map[string]*regexp.Regexp)
-		for k, v := range m.Match {
+	for _, t := range cfg.Triggers {
+		t.matchCompiled = make(map[string]*regexp.Regexp)
+		for k, v := range t.Match {
 			match, err := regexp.Compile(v)
 			if err != nil {
 				return nil, fmt.Errorf("Invalid regexp %q: %s", v, err)
 			}
-			m.matchCompiled[k] = match
+			t.matchCompiled[k] = match
 		}
 	}
 

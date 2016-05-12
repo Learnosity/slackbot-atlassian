@@ -7,17 +7,11 @@ import (
 )
 
 type Slack interface {
-	PostMessage(channel string, as_user User, message string) error
-}
-
-type User struct {
-	Name      string
-	IconUrl   string
-	IconEmoji string
+	PostMessage(channel string, as_user config.SlackUser, message string) error
 }
 
 type impl struct {
-	cfg config.SlackConfig
+	cfg    config.SlackConfig
 	client *slack.Client
 }
 
@@ -25,7 +19,7 @@ func New(cfg config.SlackConfig) Slack {
 	return impl{cfg, slack.New(cfg.Auth.Token)}
 }
 
-func (s impl) PostMessage(channel string, user User, message string) error {
+func (s impl) PostMessage(channel string, user config.SlackUser, message string) error {
 	params := slack.NewPostMessageParameters()
 
 	params.Username = user.Name

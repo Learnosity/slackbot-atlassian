@@ -7,6 +7,7 @@ import (
 
 	"slackbot_jira/atlassian"
 	"slackbot_jira/config"
+	"slackbot_jira/message"
 	"slackbot_jira/slack"
 	"slackbot_jira/state"
 )
@@ -34,7 +35,7 @@ func ProcessActivityStream(config *config.Config) error {
 
 	logF("Creating slack client")
 	// Get a Slack client
-	_ = slack.New(config.Slack)
+	slack_client := slack.New(config.Slack)
 
 	logF("Looking for last event")
 	// Get the last event
@@ -75,12 +76,16 @@ func ProcessActivityStream(config *config.Config) error {
 
 		activity_issues = append(activity_issues, atlassian.ActivityIssue{activity, issue})
 	}
+	fmt.Println(activity_issues)
+	matcher := message.NewMessageMatcher(config.Slack)
 
-	// Now turn them into messages based on our matches
-	// TODO
+	messages := matcher.GetMatchingMessages(config.Triggers, activity_issues...)
 
-	// Now POST them to Slack
-	// TODO
+	for _, m := range messages {
+		if err := slack_client.PostMessage(m.SlackChannel, m.AsUser, m.Text); err != nil {
+			return err
+		}
+	}
 
 	if len(activities) > 0 {
 		// Record the last event seen
