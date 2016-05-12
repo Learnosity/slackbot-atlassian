@@ -2,6 +2,12 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "github.com/plouc/go-jira-client",
+			"repository": "https://github.com/plouc/go-jira-client",
+			"revision": "d48f88036841ffb9a3d01c63e4643ef2dbc571ea",
+			"branch": "master"
+		},
+		{
 			"importpath": "gopkg.in/bsm/ratelimit.v1",
 			"repository": "https://gopkg.in/bsm/ratelimit.v1",
 			"revision": "db14e161995a5177acef654cb0dd785e8ee8bc22",
