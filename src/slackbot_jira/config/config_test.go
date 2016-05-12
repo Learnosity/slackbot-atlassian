@@ -47,7 +47,7 @@ func TestLoadConfig(t *testing.T) {
                 "slack": {
                     "team_domain": "Learnosity"
                 },
-                "matches": [
+                "triggers": [
                     {
                        "slack_channel": "team-yoda-jira",
                        "match": {
