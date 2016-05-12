@@ -2,10 +2,23 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "github.com/nlopes/slack",
+			"repository": "https://github.com/nlopes/slack",
+			"revision": "e337a7316d3fe9aa55b7063035d6d32f3dbcaeb9",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/plouc/go-jira-client",
 			"repository": "https://github.com/plouc/go-jira-client",
 			"revision": "d48f88036841ffb9a3d01c63e4643ef2dbc571ea",
 			"branch": "master"
+		},
+		{
+			"importpath": "golang.org/x/net/websocket",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "96dbb961a39ddccf16860cdd355bfa639c497f23",
+			"branch": "master",
+			"path": "/websocket"
 		},
 		{
 			"importpath": "gopkg.in/bsm/ratelimit.v1",
