@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"slackbot_jira"
-	"slackbot_jira/config"
+	"slackbot_atlassian"
+	"slackbot_atlassian/config"
 )
 
 func failF(msg string, args ...interface{}) {
@@ -19,7 +19,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = slackbot_jira.ProcessActivityStream(cfg)
+	err = slackbot_atlassian.ProcessActivityStream(cfg)
 	if err != nil {
 		failF("Error while processing activity stream: %s\n", err)
 		os.Exit(1)

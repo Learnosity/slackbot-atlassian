@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"slackbot_jira/config"
+	"slackbot_atlassian/config"
 
 	"gopkg.in/redis.v3"
 )
 
-const redis_state_key = "slackbot_jira_last_event"
+const redis_state_key = "slackbot_atlassian_last_event"
 
 type Event struct {
 	TimestampSecs int64  `json:"timestamp_secs"`

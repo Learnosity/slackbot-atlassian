@@ -1,15 +1,15 @@
-package slackbot_jira
+package slackbot_atlassian
 
 import (
 	"fmt"
 	"os"
 	"time"
 
-	"slackbot_jira/atlassian"
-	"slackbot_jira/config"
-	"slackbot_jira/message"
-	"slackbot_jira/slack"
-	"slackbot_jira/state"
+	"slackbot_atlassian/atlassian"
+	"slackbot_atlassian/config"
+	"slackbot_atlassian/message"
+	"slackbot_atlassian/slack"
+	"slackbot_atlassian/state"
 )
 
 func logF(msg string, args ...interface{}) {

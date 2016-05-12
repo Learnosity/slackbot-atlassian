@@ -7,7 +7,7 @@ import (
 
 	"github.com/plouc/go-jira-client"
 
-	"slackbot_jira/config"
+	"slackbot_atlassian/config"
 )
 
 // These types are lifted straight from https://github.com/plouc/go-jira-client/blob/master/jira.go

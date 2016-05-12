@@ -1,7 +1,7 @@
 package slack
 
 import (
-	"slackbot_jira/config"
+	"slackbot_atlassian/config"
 
 	"github.com/nlopes/slack"
 )

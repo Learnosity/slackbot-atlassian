@@ -2,8 +2,8 @@ package message
 
 import (
 	"fmt"
-	"slackbot_jira/atlassian"
-	"slackbot_jira/config"
+	"slackbot_atlassian/atlassian"
+	"slackbot_atlassian/config"
 )
 
 type Message struct {

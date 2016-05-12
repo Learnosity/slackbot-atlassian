@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"slackbot_jira/config"
+	"slackbot_atlassian/config"
 )
 
 func test_state(t *testing.T) State {

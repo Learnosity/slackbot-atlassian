@@ -1,1 +1,0 @@
-package slackbot_jira

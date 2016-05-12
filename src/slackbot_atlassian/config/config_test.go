@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"slackbot_jira/config"
+	"slackbot_atlassian/config"
 )
 
 func TestLoadConfig(t *testing.T) {

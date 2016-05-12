@@ -5,7 +5,7 @@ package slack
 import (
 	"testing"
 
-	"slackbot_jira/config"
+	"slackbot_atlassian/config"
 )
 
 func TestSlackPostMessage(t *testing.T) {
