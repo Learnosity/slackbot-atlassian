@@ -19,7 +19,6 @@ func test_state(t *testing.T) State {
 	s, err := new(cfg, key)
 	if err != nil {
 		t.Error(err)
-		t.FailNow()
 	}
 	return s
 }
@@ -31,22 +30,18 @@ func TestState(t *testing.T) {
 
 	err := s.RecordLastEvent(ev)
 	if err != nil {
-		t.Error(err)
-		t.Fail()
+		t.Fatal(err)
 	}
 
 	ev2, ok, err := s.GetLastEvent()
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		t.Fatal(err)
 	} else if !ok {
 		t.Errorf("No last event found")
-		t.FailNow()
+		t.Fatal(err)
 	} else if ev2.TimestampSecs != ev.TimestampSecs {
-		t.Errorf("Timestamps do not match")
-		t.FailNow()
+		t.Fatal("Timestamps do not match")
 	} else if ev2.Id != ev.Id {
-		t.Errorf("Ids do not match")
-		t.FailNow()
+		t.Fatal("Ids do not match")
 	}
 }
