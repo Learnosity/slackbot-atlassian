@@ -25,6 +25,12 @@ func TestSlackPostMessage(t *testing.T) {
 	err = slack.PostMessage("@slackbot", user, "hello world")
 
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+	}
+
+	err = slack.PostMessage("wrong_channel_name_kjsdfkjsf", user, "hello world")
+
+	if err == nil {
+		t.Error("Expected error for incorrect channel name")
 	}
 }
