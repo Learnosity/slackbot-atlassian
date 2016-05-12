@@ -1,21 +1,21 @@
 package config_test
 
 import (
-    "bytes"
-    "strings"
-    "testing"
+	"bytes"
+	"strings"
+	"testing"
 
-    "slackbot_jira/config"
+	"slackbot_jira/config"
 )
 
 func TestLoadConfig(t *testing.T) {
-    cases := []struct{
-        input string
-        is_valid bool
-        err_match string
-    }{
-        {
-            `{
+	cases := []struct {
+		input     string
+		is_valid  bool
+		err_match string
+	}{
+		{
+			`{
                 "state": {"driver": "redis", "host": "localhost", "port": 0, "db": 0},
                 "jira": {
                     "host": "learnosity.atlassian.net",
@@ -37,11 +37,11 @@ func TestLoadConfig(t *testing.T) {
                 ]
             }
             `, true, "",
-        },
-        {`jkldfj`, false, "invalid character"},
-        {`{"state": 0}`, false, "cannot unmarshal number"},
-        {
-            `{
+		},
+		{`jkldfj`, false, "invalid character"},
+		{`{"state": 0}`, false, "cannot unmarshal number"},
+		{
+			`{
                 "state": {"driver": "redis", "host": "localhost", "port": 0, "db": 0},
                 "jira": {},
                 "slack": {
@@ -57,21 +57,21 @@ func TestLoadConfig(t *testing.T) {
                 ]
             }
             `, false, "Invalid regexp",
-        },
-    }
+		},
+	}
 
-    for _, c := range cases {
-        buf := bytes.NewBuffer([]byte(c.input))
-        _, err := config.LoadConfig(buf)
-        if err == nil && !c.is_valid {
-            t.Errorf("Expected JSON not to be valid config")
-            t.Fail()
-        } else if err != nil && c.is_valid {
-            t.Errorf("Expected JSON to be valid config; got error %s", err)
-            t.Fail()
-        } else if err != nil && !strings.Contains(err.Error(), c.err_match) {
-            t.Errorf("Expected error to contain %q, got %q", c.err_match, err)
-            t.Fail()
-        }
-    }
+	for _, c := range cases {
+		buf := bytes.NewBuffer([]byte(c.input))
+		_, err := config.LoadConfig(buf)
+		if err == nil && !c.is_valid {
+			t.Errorf("Expected JSON not to be valid config")
+			t.Fail()
+		} else if err != nil && c.is_valid {
+			t.Errorf("Expected JSON to be valid config; got error %s", err)
+			t.Fail()
+		} else if err != nil && !strings.Contains(err.Error(), c.err_match) {
+			t.Errorf("Expected error to contain %q, got %q", c.err_match, err)
+			t.Fail()
+		}
+	}
 }
