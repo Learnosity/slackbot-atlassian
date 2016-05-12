@@ -1,0 +1,24 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/go-redis/redis",
+			"repository": "https://github.com/go-redis/redis",
+			"revision": "5183f8dcde9737db7583dbfa9881800dba26e3fa",
+			"branch": "v3"
+		},
+		{
+			"importpath": "gopkg.in/bsm/ratelimit.v1",
+			"repository": "https://gopkg.in/bsm/ratelimit.v1",
+			"revision": "db14e161995a5177acef654cb0dd785e8ee8bc22",
+			"branch": "v1"
+		},
+		{
+			"importpath": "gopkg.in/redis.v3/internal",
+			"repository": "https://gopkg.in/redis.v3",
+			"revision": "5183f8dcde9737db7583dbfa9881800dba26e3fa",
+			"branch": "master",
+			"path": "/internal"
+		}
+	]
+}
