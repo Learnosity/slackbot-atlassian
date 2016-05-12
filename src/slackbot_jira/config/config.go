@@ -34,8 +34,7 @@ type AtlassianConfig struct {
 type SlackConfig struct {
 	TeamDomain string `json:"team_domain"`
 	Auth       struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Token string `json:"token"`
 	} `json:"auth"`
 }
 

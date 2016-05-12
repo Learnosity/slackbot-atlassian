@@ -34,10 +34,7 @@ func ProcessActivityStream(config *config.Config) error {
 
 	logF("Creating slack client")
 	// Get a Slack client
-	_, err = slack.New(config.Slack)
-	if err != nil {
-		return err
-	}
+	_ = slack.New(config.Slack)
 
 	logF("Looking for last event")
 	// Get the last event
