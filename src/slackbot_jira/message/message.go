@@ -40,11 +40,11 @@ func (m matcher) GetMatchingMessages(triggers []config.MessageTrigger, activity_
 
 func (m matcher) get_match(trigger config.MessageTrigger, activity_issue atlassian.ActivityIssue) (match, bool) {
 	// TODO
-	return match{m.cfg, trigger, activity_issue}, true
+	return match{m.cfg.Users, trigger, activity_issue}, true
 }
 
 type match struct {
-	cfg            config.SlackConfig
+	users          map[string]config.SlackUser
 	trigger        config.MessageTrigger
 	activity_issue atlassian.ActivityIssue
 }
@@ -52,8 +52,8 @@ type match struct {
 func (m match) get_messages() []Message {
 	message := Message{
 		m.trigger.SlackChannel,
-		m.cfg.Users[m.trigger.SlackUserKey],
-		fmt.Sprintf("%+v", m.activity_issue),
+		m.users[m.trigger.SlackUserKey],
+		fmt.Sprintf("%s", m.activity_issue.Activity.Title),
 	}
 	return []Message{message}
 }
