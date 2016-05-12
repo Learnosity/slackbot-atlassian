@@ -26,7 +26,7 @@ type StateConfig struct {
 type JiraConfig struct {
     Host string `json:"base_url"`
     Auth struct {
-        User string `json:"user"`
+        Username string `json:"user"`
         Password string `json:"password"`
     } `json:"auth"`
 }
@@ -34,7 +34,8 @@ type JiraConfig struct {
 type SlackConfig struct {
     TeamDomain string `json:"team_domain"`
     Auth struct {
-        Token string `json:"token"`
+        Username string `json:"username"`
+        Password string `json:"password"`
     } `json:"auth"`
 }
 

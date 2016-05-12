@@ -17,7 +17,7 @@ import (
 // * processes each activity and posts it to Slack
 func ProcessActivityStream(config *config.Config) error {
     // Get access to our state
-    _, err := state.New(config.State)
+    s, err := state.New(config.State)
     if err != nil {
         return err
     }
@@ -31,13 +31,24 @@ func ProcessActivityStream(config *config.Config) error {
         return err
     }
 
-    // Do stuff
-    since := time.Now().AddDate(0, 0, -1)
-    activities, err := jira.GetNewActivities(since)
+    // Get the last event
+    ev, ok, err := s.GetLastEvent()
     if err != nil {
         return err
     }
-    fmt.Printf("Activities since %s\n", since)
+    if !ok {
+        // Fabricate an event
+        ev = state.Event{time.Now().Unix(), ""}
+    }
+
+    // Get activities since this event
+
+    // Do stuff
+    activities, err := jira.GetNewActivities(ev.TimestampSecs-1, ev.Id)
+    if err != nil {
+        return err
+    }
+    fmt.Printf("Activities since %s\n", ev.TimestampSecs)
     for _, activity := range activities {
         fmt.Println(activity.Title)
     }

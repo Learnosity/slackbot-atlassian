@@ -1,14 +1,13 @@
 package jira
 
 import (
-    "encoding/xml"
-    "fmt"
-    "net/http"
-    "time"
+	"encoding/xml"
+	"fmt"
+	"net/http"
 
-    "github.com/plouc/go-jira-client"
+	"github.com/plouc/go-jira-client"
 
-    "slackbot_jira/config"
+	"slackbot_jira/config"
 )
 
 // These types are lifted straight from https://github.com/plouc/go-jira-client/blob/master/jira.go
@@ -35,31 +34,38 @@ type activityFeed struct {
 */
 
 type Jira interface {
-   GetNewActivities(time.Time) ([]*gojira.ActivityItem, error)
+	GetNewActivities(unix_time int64, last_id_seen string) ([]*gojira.ActivityItem, error)
+    GetIssue(id string) (*gojira.Issue, error)
 }
 
 func New(cfg config.JiraConfig) Jira {
-    return &jira{cfg}
+	return &jira{cfg}
 }
 
 type jira struct {
-    cfg config.JiraConfig
+	cfg config.JiraConfig
 }
 
 func (j *jira) GetNewActivities(since int64, last_id_seen string) ([]*gojira.ActivityItem, error) {
-	// TODO
-	url := fmt.Sprintf("https://cera.davies:blah@learnosity.atlassian.net/activity?streams=update-date+AFTER+%d", since.Unix())
+	url := fmt.Sprintf("https://%s:%s@%s/activity?streams=update-date+AFTER+%d",
+        j.cfg.Auth.Username, j.cfg.Auth.Password, j.cfg.Host, since)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-    var activities gojira.ActivityFeed
-    dec := xml.NewDecoder(resp.Body)
-    err = dec.Decode(&activities)
-    if err != nil {
-        return nil, err
-    }
-    return activities.Entries, nil
+	var activities gojira.ActivityFeed
+	dec := xml.NewDecoder(resp.Body)
+	err = dec.Decode(&activities)
+	if err != nil {
+		return nil, err
+	}
+	return activities.Entries, nil
+}
+
+
+func (j *jira) GetIssue(id string) (*gojira.Issue, error) {
+    // TODO
+    return nil, nil
 }
