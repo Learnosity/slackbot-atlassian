@@ -35,7 +35,7 @@ func (m matcher) GetMatchingMessages(triggers []config.MessageTrigger, activity_
 		}
 	}
 
-	return nil
+	return messages
 }
 
 func (m matcher) get_match(trigger config.MessageTrigger, activity_issue atlassian.ActivityIssue) (match, bool) {

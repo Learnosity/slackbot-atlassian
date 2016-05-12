@@ -17,7 +17,7 @@ func TestSlackPostMessage(t *testing.T) {
 
 	slack := New(cfg.Slack)
 
-	user := User{
+	user := config.SlackUser{
 		Name:      "Bob",
 		IconEmoji: ":skull:",
 	}

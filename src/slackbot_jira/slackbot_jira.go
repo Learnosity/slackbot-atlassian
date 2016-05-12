@@ -76,7 +76,7 @@ func ProcessActivityStream(config *config.Config) error {
 
 		activity_issues = append(activity_issues, atlassian.ActivityIssue{activity, issue})
 	}
-	fmt.Println(activity_issues)
+
 	matcher := message.NewMessageMatcher(config.Slack)
 
 	messages := matcher.GetMatchingMessages(config.Triggers, activity_issues...)
