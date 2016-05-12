@@ -71,7 +71,8 @@ const (
 )
 
 func (a *atlassian) GetNewJiraActivities(since int64, last_id_seen string) ([]*ActivityItem, error) {
-	url := fmt.Sprintf("https://%s:%s@%s/activity?providers=%s&streams=update-date+AFTER+%d",
+	url := fmt.Sprintf(
+		"https://%s:%s@%s/activity?providers=%s&streams=update-date+AFTER+%d",
 		a.cfg.Auth.Username, a.cfg.Auth.Password, a.cfg.Host, atlassian_provider, since)
 	resp, err := http.Get(url)
 	if err != nil {
