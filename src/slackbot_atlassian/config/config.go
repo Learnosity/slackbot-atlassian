@@ -55,12 +55,20 @@ type CustomJiraFieldConfig struct {
 	JiraField string `json:"jira_field"`
 }
 
+type ResourceStorageConfig struct {
+	S3_Bucket             string `json:"s3_bucket"`
+	S3_Region             string `json:"s3_region"`
+	AWS_Access_Key_ID     string `json:"aws_key"`
+	AWS_Secret_Access_Key string `json:"aws_secret"`
+}
+
 type Config struct {
 	State            StateConfig             `json:"state"`
 	Atlassian        AtlassianConfig         `json:"atlassian"`
 	Slack            SlackConfig             `json:"slack"`
 	Triggers         []*MessageTrigger       `json:"triggers"`
 	CustomJiraFields []CustomJiraFieldConfig `json:"custom_jira_fields"`
+	ResourceStorage  ResourceStorageConfig   `json:"resource_storage"`
 }
 
 func LoadConfig(input io.Reader) (*Config, error) {

@@ -7,6 +7,7 @@ import (
 	"slackbot_atlassian/message"
 	"slackbot_atlassian/slack"
 	"slackbot_atlassian/state"
+	"slackbot_atlassian/storage"
 )
 
 // This function:
@@ -29,6 +30,9 @@ func ProcessActivityStream(config *config.Config) error {
 	log.LogF("Creating slack client")
 	// Get a Slack client
 	slack_client := slack.New(config.Slack)
+
+	log.LogF("Creating a storage (S3) client")
+	storage_client := storage.New(config.ResourceStorage)
 
 	log.LogF("Looking for last event")
 	// Get the last event
@@ -69,7 +73,9 @@ func ProcessActivityStream(config *config.Config) error {
 		activity_issues = append(activity_issues, atlassian.ActivityIssue{activity, issue})
 	}
 
-	matcher := message.NewMessageMatcher(config.Slack, config.CustomJiraFields...)
+	user_image_urls := get_user_image_urls(storage_client, atl, s, activity_issues)
+
+	matcher := message.NewMessageMatcher(config.Slack, user_image_urls, config.CustomJiraFields...)
 
 	messages := matcher.GetMatchingMessages(config.Triggers, activity_issues...)
 
@@ -92,4 +98,53 @@ func ProcessActivityStream(config *config.Config) error {
 	}
 
 	return nil
+}
+
+func get_user_image_urls(storage_client storage.Client, atlassian_client atlassian.Atlassian, state_client state.State, activity_issues []atlassian.ActivityIssue) map[string]string {
+	urls := make(map[string]string)
+	for _, ai := range activity_issues {
+		name := ai.Activity.Author.Username
+
+		_, ok := urls[name]
+		if ok {
+			continue
+		}
+
+		url, ok, err := state_client.GetUserImageURL(name)
+		if ok && err == nil {
+			urls[name] = url
+			continue
+		} else if err != nil {
+			log.LogF("Could not retrieve URL for user %s in Redis: %s", name, err)
+		}
+
+		// Retrieve and record it instead
+		rdr, ok, err := atlassian_client.UserImage(*ai.Activity)
+		if err != nil {
+			log.LogF("Could not retrieve image for user %s from Jira: %s", name, err)
+			continue
+		} else if !ok {
+			log.LogF("Could not find any image for user %s in Redis", name)
+			continue
+		}
+
+		path := "users/images/" + name
+		err = storage_client.PutObject(rdr, path)
+		if err != nil {
+			log.LogF("Failed to persist image for user %s: %s", name, err)
+			continue
+		}
+
+		full_url := storage_client.GetFullURL(path)
+		urls[name] = full_url
+
+		// Cache it for next time
+		err = state_client.RecordUserImageURL(name, full_url)
+		if err != nil {
+			log.LogF("Failed to save image URL for user %s: %s", name, err)
+		}
+
+	}
+
+	return urls
 }

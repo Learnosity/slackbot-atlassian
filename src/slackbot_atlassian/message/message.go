@@ -22,10 +22,11 @@ type MessageMatcher interface {
 type matcher struct {
 	cfg                config.SlackConfig
 	custom_jira_fields []config.CustomJiraFieldConfig
+	user_image_urls    map[string]string
 }
 
-func NewMessageMatcher(cfg config.SlackConfig, custom_jira_fields ...config.CustomJiraFieldConfig) MessageMatcher {
-	return matcher{cfg, custom_jira_fields}
+func NewMessageMatcher(cfg config.SlackConfig, user_image_urls map[string]string, custom_jira_fields ...config.CustomJiraFieldConfig) MessageMatcher {
+	return matcher{cfg, custom_jira_fields, user_image_urls}
 }
 
 func (m matcher) GetMatchingMessages(triggers []*config.MessageTrigger, activity_issues ...atlassian.ActivityIssue) []Message {
@@ -57,7 +58,7 @@ func (m matcher) get_match(trigger *config.MessageTrigger, activity_issue atlass
 		}
 	}
 
-	return &match{m.cfg.Users, trigger, activity_issue}, true, nil
+	return &match{m.user_image_urls, trigger, activity_issue}, true, nil
 }
 
 func (m matcher) get_trigger_field_value(name string, activity_issue atlassian.ActivityIssue) (string, bool, error) {
@@ -90,16 +91,17 @@ func (m matcher) get_trigger_field_value(name string, activity_issue atlassian.A
 }
 
 type match struct {
-	users          map[string]config.SlackUser
-	trigger        *config.MessageTrigger
-	activity_issue atlassian.ActivityIssue
+	user_image_urls map[string]string
+	trigger         *config.MessageTrigger
+	activity_issue  atlassian.ActivityIssue
 }
 
 func (m match) get_messages() []Message {
 	message := Message{
 		m.trigger.SlackChannel,
 		config.SlackUser{
-			Name: m.activity_issue.Activity.Author.Name,
+			Name:    m.activity_issue.Activity.Author.Name,
+			IconUrl: m.user_image_urls[m.activity_issue.Activity.Author.Username],
 		},
 		GetTextFromActivityItem(m.activity_issue.Activity),
 	}

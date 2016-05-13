@@ -3,6 +3,7 @@ package state
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"slackbot_atlassian/config"
@@ -19,6 +20,9 @@ type Event struct {
 type State interface {
 	RecordLastEvent(Event) error
 	GetLastEvent() (Event, bool, error)
+
+	RecordUserImageURL(username, url string) error
+	GetUserImageURL(username string) (string, bool, error)
 }
 
 func New(cfg config.StateConfig) (State, error) {
@@ -75,4 +79,31 @@ func (r *redisState) GetLastEvent() (Event, bool, error) {
 	}
 
 	return ev, true, json.Unmarshal([]byte(val), &ev)
+}
+
+func user_image_url_key(username string) string {
+	return "image-url-" + strings.Replace(username, " ", "_", -1)
+}
+
+func (r *redisState) RecordUserImageURL(username, url string) error {
+	key := user_image_url_key(username)
+	sc := r.client.Set(key, url, time.Duration(0))
+	return sc.Err()
+}
+
+func (r *redisState) GetUserImageURL(username string) (string, bool, error) {
+	key := user_image_url_key(username)
+
+	sc := r.client.Get(key)
+	err := sc.Err()
+	if err != nil && err == redis.Nil {
+		// No key found
+		return "", false, nil
+	} else if err != nil {
+		// Error looking up key
+		return "", false, err
+	}
+
+	val, err := sc.Result()
+	return val, true, err
 }

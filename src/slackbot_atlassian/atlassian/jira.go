@@ -1,11 +1,14 @@
 package atlassian
 
 import (
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"slackbot_atlassian/config"
@@ -25,6 +28,8 @@ type Person struct {
 	URI      string `xml:"uri"json:"uri"`
 	Email    string `xml:"email"json:"email"`
 	InnerXML string `xml:",innerxml"json:"inner_xml"`
+	Link     []Link `xml:"link"json:"link"`
+	Username string `xml:"username"`
 }
 
 type Text struct {
@@ -84,6 +89,15 @@ type ActivityItem struct {
 	ActivityObject *ActivityTargetOrObject `xml:"object"`
 }
 
+func (ai ActivityItem) user_image_url() (string, bool) {
+	for _, l := range ai.Author.Link {
+		if l.Rel == "photo" {
+			return l.Href, true
+		}
+	}
+	return "", false
+}
+
 type ActivityFeed struct {
 	XMLName xml.Name        `xml:"http://www.w3.org/2005/Atom feed"json:"xml_name"`
 	Title   string          `xml:"title"json:"title"`
@@ -117,6 +131,8 @@ type ActivityIssue struct {
 type Atlassian interface {
 	GetNewJiraActivities(last_id_seen string) ([]*ActivityItem, error)
 	GetIssue(id string) (*Issue, error)
+
+	UserImage(ActivityItem) (io.Reader, bool, error)
 }
 
 func New(cfg config.AtlassianConfig) Atlassian {
@@ -193,6 +209,34 @@ func (a *atlassian) GetIssue(issue_id string) (*Issue, error) {
 
 	var issue Issue
 	return &issue, decodeJson(resp.Body, &issue)
+}
+
+func (a *atlassian) UserImage(ai ActivityItem) (io.Reader, bool, error) {
+	log.LogF("Retrieving image for user %s", ai.Author.Username)
+	url, ok := ai.user_image_url()
+	if !ok {
+		return nil, false, nil
+	}
+
+	// Splice our basic auth into the URL
+	url = strings.Replace(url, "https://", fmt.Sprintf("https://%s:%s@", a.cfg.Auth.Username, a.cfg.Auth.Password), 1)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, false, fmt.Errorf("Bad status code looking up image for user %s: %d", ai.Author.Username, resp.StatusCode)
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return bytes.NewBuffer(b), true, nil
 }
 
 func decodeJson(rdr io.Reader, into interface{}) error {
