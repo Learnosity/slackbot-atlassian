@@ -116,7 +116,7 @@ func GetTextFromActivityItem(activity *atlassian.ActivityItem) string {
 	text = re.ReplaceAllString(text, "<$1|$2>")
 
 	// Strip duplicate whitespace
-	re = regexp.MustCompile(" +")
+	re = regexp.MustCompile("\\s+")
 	text = re.ReplaceAllString(text, " ")
 
 	return text
