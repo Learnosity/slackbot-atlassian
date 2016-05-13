@@ -54,24 +54,7 @@ func ProcessActivityStream(config *config.Config) error {
 
 	log.LogF("Found %d new activities since last event %v", len(activities), lastEvent)
 
-	activity_issues := make([]atlassian.ActivityIssue, 0)
-	// Loop backwards so that we go from oldest to newest
-	for _, activity := range activities {
-		// Look up the issue
-		issue_id, ok := activity.GetIssueID()
-		if !ok {
-			log.LogF("Could not get issue ID off activity: %s", err)
-			continue
-		}
-
-		issue, err := atl.GetIssue(issue_id)
-		if err != nil {
-			log.LogF("Could not find issue %s - %s", issue, err)
-			continue
-		}
-
-		activity_issues = append(activity_issues, atlassian.ActivityIssue{activity, issue})
-	}
+	activity_issues := get_issues(config, atl, activities)
 
 	user_image_urls := get_user_image_urls(storage_client, atl, s, activity_issues)
 
@@ -98,6 +81,59 @@ func ProcessActivityStream(config *config.Config) error {
 	}
 
 	return nil
+}
+
+func get_issues(config *config.Config, atl atlassian.Atlassian, activities []*atlassian.ActivityItem) []atlassian.ActivityIssue {
+	activity_issues := make([]atlassian.ActivityIssue, 0)
+
+	type result struct {
+		*atlassian.ActivityIssue
+		Ok bool
+	}
+
+	// Create a buffered channel with all the work to be done and fill it up
+	input := make(chan *atlassian.ActivityItem, len(activities))
+	for _, activity := range activities {
+		input <- activity
+	}
+	defer close(input)
+
+	// Create a buffered channel for the work results
+	output := make(chan result, len(activities))
+	defer close(output)
+
+	// Create our worker goroutines
+	for i := 0; i < config.Atlassian.ConcurrentIssueLookups; i++ {
+		go func() {
+			for activity := range input {
+				issue_id, ok := activity.GetIssueID()
+				if !ok {
+					log.LogF("Could not get issue ID off activity")
+					output <- result{nil, false}
+					continue
+				}
+
+				issue, err := atl.GetIssue(issue_id)
+				if err != nil {
+					log.LogF("Could not find issue %s - %s", issue, err)
+					output <- result{nil, false}
+					continue
+				}
+
+				output <- result{&atlassian.ActivityIssue{activity, issue}, true}
+			}
+		}()
+	}
+
+	// Collect the output
+	for i := 0; i < len(activities); i++ {
+		res := <-output
+		if res.Ok {
+			activity_issues = append(activity_issues, *res.ActivityIssue)
+		}
+	}
+
+	return activity_issues
 }
 
 func get_user_image_urls(storage_client storage.Client, atlassian_client atlassian.Atlassian, state_client state.State, activity_issues []atlassian.ActivityIssue) map[string]string {

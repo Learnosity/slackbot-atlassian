@@ -28,9 +28,10 @@ type StateConfig struct {
 }
 
 type AtlassianConfig struct {
-	Host              string `json:"host"`
-	MaxActivityLookup int    `json:"max_activity_lookup"`
-	Auth              struct {
+	Host                   string `json:"host"`
+	MaxActivityLookup      int    `json:"max_activity_lookup"`
+	ConcurrentIssueLookups int    `json:"concurrent_issue_lookups"`
+	Auth                   struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	} `json:"auth"`
