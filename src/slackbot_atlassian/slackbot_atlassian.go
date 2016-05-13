@@ -69,7 +69,7 @@ func ProcessActivityStream(config *config.Config) error {
 		activity_issues = append(activity_issues, atlassian.ActivityIssue{activity, issue})
 	}
 
-	matcher := message.NewMessageMatcher(config.Slack)
+	matcher := message.NewMessageMatcher(config.Slack, config.CustomJiraFields...)
 
 	messages := matcher.GetMatchingMessages(config.Triggers, activity_issues...)
 
