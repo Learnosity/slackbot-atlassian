@@ -1,7 +1,6 @@
 package message
 
 import (
-	// "fmt"
 	"regexp"
 
 	"slackbot_atlassian/atlassian"
