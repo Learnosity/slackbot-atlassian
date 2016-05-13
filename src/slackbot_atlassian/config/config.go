@@ -12,7 +12,6 @@ const ENV_VAR = "CONFIG"
 
 type MessageTrigger struct {
 	SlackChannel  string            `json:"slack_channel"`
-	SlackUserKey  string            `json:"slack_user_key"`
 	Match         map[string]string `json:"match"`
 	matchCompiled map[string]*regexp.Regexp
 }
