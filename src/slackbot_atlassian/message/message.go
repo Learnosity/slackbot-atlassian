@@ -63,31 +63,40 @@ func (m matcher) get_match(trigger *config.MessageTrigger, activity_issue atlass
 
 func (m matcher) get_trigger_field_value(name string, activity_issue atlassian.ActivityIssue) (string, bool, error) {
 	// First, check if this is a custom field defined by the JSON
+
+	lookup_field := func(name string) (string, bool, error) {
+		val, ok := activity_issue.Issue.Fields[name]
+		if !ok {
+			return "", false, nil
+		} else if val == nil {
+			return "", false, nil
+		}
+		switch val.(type) {
+		case map[string]interface{}:
+			value, ok := val.(map[string]interface{})["value"].(string)
+			if !ok {
+				return "", false, fmt.Errorf("Wrong type for val inside %s: want string, have %T", name, val)
+			}
+			return value, ok, nil
+		case string:
+			return val.(string), true, nil
+		default:
+			return "", false, fmt.Errorf("Wrong type for %s: want map or string, have %T", name, val)
+		}
+	}
+
+	// First try to look up for each of our custom fields
 	for _, cf := range m.custom_jira_fields {
 		if cf.Name == name {
-			val, ok := activity_issue.Issue.Fields[cf.JiraField]
-			if !ok {
-				return "", false, nil
+			val, ok, err := lookup_field(cf.JiraField)
+			if ok {
+				return val, ok, err
 			}
-			field, ok := val.(map[string]interface{})
-			if !ok {
-				return "", false, fmt.Errorf("Wrong type for %s / %s: want string, have %T", cf.Name, cf.JiraField, val)
-			}
-			value := field["value"].(string)
-			return value, ok, nil
 		}
 	}
 
-	// Try to get this as a field from the issue
-	if val, ok := activity_issue.Issue.Fields[name]; ok {
-		s, ok := val.(string)
-		if !ok {
-			return "", false, fmt.Errorf("Wrong type for %s: want string, have %T", name, val)
-		}
-		return s, ok, nil
-	}
-
-	return "", false, nil
+	// Now try with built-in fields
+	return lookup_field(name)
 }
 
 type match struct {
