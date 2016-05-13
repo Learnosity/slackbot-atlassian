@@ -1,7 +1,9 @@
 package message
 
 import (
-	"fmt"
+	// "fmt"
+	"regexp"
+
 	"slackbot_atlassian/atlassian"
 	"slackbot_atlassian/config"
 )
@@ -52,8 +54,17 @@ type match struct {
 func (m match) get_messages() []Message {
 	message := Message{
 		m.trigger.SlackChannel,
-		m.users[m.trigger.SlackUserKey],
-		fmt.Sprintf("%s", m.activity_issue.Activity.Title),
+		config.SlackUser{
+			Name: m.activity_issue.Activity.Author.Name,
+		},
+		GetTextFromActivityItem(m.activity_issue.Activity),
 	}
 	return []Message{message}
+}
+
+func GetTextFromActivityItem(activity *atlassian.ActivityItem) string {
+	// strip name from start of title
+	re := regexp.MustCompile("^<a.+?</a>")
+	text := re.ReplaceAllString(activity.Title, "")
+	return text
 }
