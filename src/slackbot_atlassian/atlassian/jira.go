@@ -1,8 +1,10 @@
 package atlassian
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/plouc/go-jira-client"
@@ -97,7 +99,26 @@ func (a *atlassian) GetNewJiraActivities(since int64, last_id_seen string) ([]*A
 	return entries, nil
 }
 
-func (a *atlassian) GetIssue(id string) (*Issue, error) {
-	// TODO
-	return nil, nil
+func (a *atlassian) GetIssue(issue_id string) (*Issue, error) {
+	url := fmt.Sprintf(
+		"https://%s:%s@%s/rest/api/latest/issue/%s",
+		a.cfg.Auth.Username, a.cfg.Auth.Password, a.cfg.Host, issue_id)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Bad status code looking up issue %s: %d", issue_id, resp.StatusCode)
+	}
+
+	var issue Issue
+	return &issue, decodeJson(resp.Body, &issue)
+}
+
+func decodeJson(rdr io.Reader, into interface{}) error {
+	dec := json.NewDecoder(rdr)
+	return dec.Decode(into)
 }
