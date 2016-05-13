@@ -1,6 +1,8 @@
 package slackbot_atlassian
 
 import (
+	"sync"
+
 	"slackbot_atlassian/atlassian"
 	"slackbot_atlassian/config"
 	"slackbot_atlassian/log"
@@ -56,22 +58,34 @@ func ProcessActivityStream(config *config.Config) error {
 
 	activity_issues := get_issues(config, atl, activities)
 
-	user_image_urls := get_user_image_urls(storage_client, atl, s, activity_issues)
+	var ai atlassian.ActivityIssue
+	var posted int
+	var seen bool
 
-	matcher := message.NewMessageMatcher(config.Slack, user_image_urls, config.CustomJiraFields...)
+	for ai = range activity_issues {
+		seen = true
 
-	messages := matcher.GetMatchingMessages(config.Triggers, activity_issues...)
+		user_image_urls := get_user_image_urls(storage_client, atl, s, ai)
+		matcher := message.NewMessageMatcher(config.Slack, user_image_urls, config.CustomJiraFields...)
+		messages := matcher.GetMatchingMessages(config.Triggers, ai)
 
-	log.LogF("Posting %d messages to Slack", len(messages))
-	for _, m := range messages {
-		if err := slack_client.PostMessage(m.SlackChannel, m.AsUser, m.Text); err != nil {
-			return err
+		posted += len(messages)
+
+		if len(messages) != 0 {
+			log.LogF("Posting %d messages to Slack", len(messages))
+			for _, m := range messages {
+				if err := slack_client.PostMessage(m.SlackChannel, m.AsUser, m.Text); err != nil {
+					return err
+				}
+			}
 		}
 	}
 
-	if len(activities) > 0 {
+	log.LogF("Posted a total of %d messages to Slack", posted)
+
+	if seen {
 		// Record the last event seen
-		lastEvent = state.Event{activities[len(activities)-1].Id}
+		lastEvent = state.Event{ai.Activity.Id}
 	}
 
 	log.LogF("Record last event in state DB: %v", lastEvent)
@@ -83,24 +97,20 @@ func ProcessActivityStream(config *config.Config) error {
 	return nil
 }
 
-func get_issues(config *config.Config, atl atlassian.Atlassian, activities []*atlassian.ActivityItem) []atlassian.ActivityIssue {
-	activity_issues := make([]atlassian.ActivityIssue, 0)
-
-	type result struct {
-		*atlassian.ActivityIssue
-		Ok bool
-	}
-
+//func get_issues(config *config.Config, atl atlassian.Atlassian, activities []*atlassian.ActivityItem) []atlassian.ActivityIssue {
+func get_issues(config *config.Config, atl atlassian.Atlassian, activities []*atlassian.ActivityItem) chan atlassian.ActivityIssue {
 	// Create a buffered channel with all the work to be done and fill it up
 	input := make(chan *atlassian.ActivityItem, len(activities))
 	for _, activity := range activities {
 		input <- activity
 	}
-	defer close(input)
+	close(input)
+
+	wg := new(sync.WaitGroup)
+	wg.Add(config.Atlassian.ConcurrentIssueLookups)
 
 	// Create a buffered channel for the work results
-	output := make(chan result, len(activities))
-	defer close(output)
+	output := make(chan atlassian.ActivityIssue, len(activities))
 
 	// Create our worker goroutines
 	for i := 0; i < config.Atlassian.ConcurrentIssueLookups; i++ {
@@ -109,34 +119,32 @@ func get_issues(config *config.Config, atl atlassian.Atlassian, activities []*at
 				issue_id, ok := activity.GetIssueID()
 				if !ok {
 					log.LogF("Could not get issue ID off activity")
-					output <- result{nil, false}
 					continue
 				}
 
 				issue, err := atl.GetIssue(issue_id)
 				if err != nil {
 					log.LogF("Could not find issue %s - %s", issue, err)
-					output <- result{nil, false}
 					continue
 				}
 
-				output <- result{&atlassian.ActivityIssue{activity, issue}, true}
+				output <- atlassian.ActivityIssue{activity, issue}
 			}
+			wg.Done()
 		}()
 	}
 
-	// Collect the output
-	for i := 0; i < len(activities); i++ {
-		res := <-output
-		if res.Ok {
-			activity_issues = append(activity_issues, *res.ActivityIssue)
-		}
-	}
+	// Make sure the output channel is closed when all the workers have finished their work
+	go func() {
+		wg.Wait()
+		log.LogF("All Jira issue lookups completed")
+		close(output)
+	}()
 
-	return activity_issues
+	return output
 }
 
-func get_user_image_urls(storage_client storage.Client, atlassian_client atlassian.Atlassian, state_client state.State, activity_issues []atlassian.ActivityIssue) map[string]string {
+func get_user_image_urls(storage_client storage.Client, atlassian_client atlassian.Atlassian, state_client state.State, activity_issues ...atlassian.ActivityIssue) map[string]string {
 	urls := make(map[string]string)
 	for _, ai := range activity_issues {
 		name := ai.Activity.Author.Username
