@@ -122,6 +122,10 @@ func GetTextFromActivityItem(activity *atlassian.ActivityItem) string {
 	re := regexp.MustCompile("^<a.+?</a>")
 	text := re.ReplaceAllString(activity.Title, "")
 
+	// Convert resolved links
+	re = regexp.MustCompile(`<span class='resolved-link'>(.+?)</span>`)
+	text = re.ReplaceAllString(text, "~$1~")
+
 	// Convert HTML links
 	re = regexp.MustCompile(`<a .*?href="(.+?)".*?>(.+?)</a>`)
 	text = re.ReplaceAllString(text, "<$1|$2>")
