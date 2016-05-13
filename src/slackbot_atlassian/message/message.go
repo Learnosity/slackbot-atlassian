@@ -33,7 +33,7 @@ func (m matcher) GetMatchingMessages(triggers []*config.MessageTrigger, activity
 
 	for _, activity_issue := range activity_issues {
 		for _, trigger := range triggers {
-			if match, ok, err := m.get_match(trigger, activity_issue); ok && err != nil {
+			if match, ok, err := m.get_match(trigger, activity_issue); ok && err == nil {
 				messages = append(messages, match.get_messages()...)
 			} else if err != nil {
 				log.LogF("Error matching issue %v: %s", activity_issue, err)
