@@ -59,7 +59,7 @@ type Config struct {
 	State            StateConfig             `json:"state"`
 	Atlassian        AtlassianConfig         `json:"atlassian"`
 	Slack            SlackConfig             `json:"slack"`
-	Triggers         []MessageTrigger        `json:"triggers"`
+	Triggers         []*MessageTrigger       `json:"triggers"`
 	CustomJiraFields []CustomJiraFieldConfig `json:"custom_jira_fields"`
 }
 

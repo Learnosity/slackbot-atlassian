@@ -16,7 +16,7 @@ type Message struct {
 }
 
 type MessageMatcher interface {
-	GetMatchingMessages([]config.MessageTrigger, ...atlassian.ActivityIssue) []Message
+	GetMatchingMessages([]*config.MessageTrigger, ...atlassian.ActivityIssue) []Message
 }
 
 type matcher struct {
@@ -28,7 +28,7 @@ func NewMessageMatcher(cfg config.SlackConfig, custom_jira_fields ...config.Cust
 	return matcher{cfg, custom_jira_fields}
 }
 
-func (m matcher) GetMatchingMessages(triggers []config.MessageTrigger, activity_issues ...atlassian.ActivityIssue) []Message {
+func (m matcher) GetMatchingMessages(triggers []*config.MessageTrigger, activity_issues ...atlassian.ActivityIssue) []Message {
 	messages := make([]Message, 0)
 
 	for _, activity_issue := range activity_issues {
@@ -44,7 +44,7 @@ func (m matcher) GetMatchingMessages(triggers []config.MessageTrigger, activity_
 	return messages
 }
 
-func (m matcher) get_match(trigger config.MessageTrigger, activity_issue atlassian.ActivityIssue) (*match, bool, error) {
+func (m matcher) get_match(trigger *config.MessageTrigger, activity_issue atlassian.ActivityIssue) (*match, bool, error) {
 	for name, match := range trigger.GetCompiledMatches() {
 		// Look up the value for this field
 		field_val, ok, err := m.get_trigger_field_value(name, activity_issue)
@@ -90,7 +90,7 @@ func (m matcher) get_trigger_field_value(name string, activity_issue atlassian.A
 
 type match struct {
 	users          map[string]config.SlackUser
-	trigger        config.MessageTrigger
+	trigger        *config.MessageTrigger
 	activity_issue atlassian.ActivityIssue
 }
 
