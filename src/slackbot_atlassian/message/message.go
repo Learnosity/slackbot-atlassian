@@ -68,11 +68,12 @@ func (m matcher) get_trigger_field_value(name string, activity_issue atlassian.A
 			if !ok {
 				return "", false, nil
 			}
-			s, ok := val.(string)
+			field, ok := val.(map[string]interface{})
 			if !ok {
 				return "", false, fmt.Errorf("Wrong type for %s / %s: want string, have %T", cf.Name, cf.JiraField, val)
 			}
-			return s, ok, nil
+			value := field["value"].(string)
+			return value, ok, nil
 		}
 	}
 
