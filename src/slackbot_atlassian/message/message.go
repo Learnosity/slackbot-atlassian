@@ -1,10 +1,12 @@
 package message
 
 import (
+    "fmt"
 	"regexp"
 
 	"slackbot_atlassian/atlassian"
 	"slackbot_atlassian/config"
+	"slackbot_atlassian/log"
 )
 
 type Message struct {
@@ -18,11 +20,12 @@ type MessageMatcher interface {
 }
 
 type matcher struct {
-	cfg config.SlackConfig
+	cfg                config.SlackConfig
+	custom_jira_fields []config.CustomJiraFieldConfig
 }
 
-func NewMessageMatcher(cfg config.SlackConfig) MessageMatcher {
-	return matcher{cfg}
+func NewMessageMatcher(cfg config.SlackConfig, custom_jira_fields ...config.CustomJiraFieldConfig) MessageMatcher {
+	return matcher{cfg, custom_jira_fields}
 }
 
 func (m matcher) GetMatchingMessages(triggers []config.MessageTrigger, activity_issues ...atlassian.ActivityIssue) []Message {
@@ -30,8 +33,10 @@ func (m matcher) GetMatchingMessages(triggers []config.MessageTrigger, activity_
 
 	for _, activity_issue := range activity_issues {
 		for _, trigger := range triggers {
-			if match, ok := m.get_match(trigger, activity_issue); ok {
+			if match, ok, err := m.get_match(trigger, activity_issue); ok {
 				messages = append(messages, match.get_messages()...)
+			} else if err != nil {
+				log.LogF("Error matching issue %v: %s", activity_issue, err)
 			}
 		}
 	}
@@ -39,12 +44,52 @@ func (m matcher) GetMatchingMessages(triggers []config.MessageTrigger, activity_
 	return messages
 }
 
-func (m matcher) get_match(trigger config.MessageTrigger, activity_issue atlassian.ActivityIssue) (match, bool) {
-	// TODO
-	return match{trigger, activity_issue}, true
+func (m matcher) get_match(trigger config.MessageTrigger, activity_issue atlassian.ActivityIssue) (*match, bool, error) {
+	for name, match := range trigger.GetCompiledMatches() {
+		// Look up the value for this field
+		field_val, ok, err := m.get_trigger_field_value(name, activity_issue)
+		if err != nil || !ok {
+			return nil, ok, err
+		}
+
+		if !match.MatchString(field_val) {
+			return nil, false, nil
+		}
+	}
+
+	return &match{m.cfg.Users, trigger, activity_issue}, true, nil
+}
+
+func (m matcher) get_trigger_field_value(name string, activity_issue atlassian.ActivityIssue) (string, bool, error) {
+	// First, check if this is a custom field defined by the JSON
+	for _, cf := range m.custom_jira_fields {
+		if cf.Name == name {
+			val, ok := activity_issue.Issue.Fields[cf.JiraField]
+			if !ok {
+				return "", false, nil
+			}
+			s, ok := val.(string)
+			if !ok {
+				return "", false, fmt.Errorf("Wrong type for %s / %s: want string, have %T", cf.Name, cf.JiraField, val)
+			}
+			return s, ok, nil
+		}
+	}
+
+	// Try to get this as a field from the issue
+	if val, ok := activity_issue.Issue.Fields[name]; ok {
+		s, ok := val.(string)
+		if !ok {
+			return "", false, fmt.Errorf("Wrong type for %s: want string, have %T", name, val)
+		}
+		return s, ok, nil
+	}
+
+	return "", false, nil
 }
 
 type match struct {
+    users map[string]config.SlackUser
 	trigger        config.MessageTrigger
 	activity_issue atlassian.ActivityIssue
 }

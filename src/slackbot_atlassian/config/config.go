@@ -16,6 +16,10 @@ type MessageTrigger struct {
 	matchCompiled map[string]*regexp.Regexp
 }
 
+func (mt MessageTrigger) GetCompiledMatches() map[string]*regexp.Regexp {
+	return mt.matchCompiled
+}
+
 type StateConfig struct {
 	Driver string      `json:"redis"`
 	Host   string      `json:"host"`
@@ -25,6 +29,7 @@ type StateConfig struct {
 
 type AtlassianConfig struct {
 	Host string `json:"host"`
+    MaxActivityLookup int `json:"max_activity_lookup"`
 	Auth struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -45,11 +50,17 @@ type SlackUser struct {
 	IconEmoji string `json:"icon_emoji"`
 }
 
+type CustomJiraFieldConfig struct {
+	Name      string `json:"name"`
+	JiraField string `json:"jira_field"`
+}
+
 type Config struct {
-	State     StateConfig      `json:"state"`
-	Atlassian AtlassianConfig  `json:"atlassian"`
-	Slack     SlackConfig      `json:"slack"`
-	Triggers  []MessageTrigger `json:"triggers"`
+	State            StateConfig             `json:"state"`
+	Atlassian        AtlassianConfig         `json:"atlassian"`
+	Slack            SlackConfig             `json:"slack"`
+	Triggers         []MessageTrigger        `json:"triggers"`
+	CustomJiraFields []CustomJiraFieldConfig `json:"custom_jira_fields"`
 }
 
 func LoadConfig(input io.Reader) (*Config, error) {
