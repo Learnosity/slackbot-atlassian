@@ -20,11 +20,11 @@ func New(cfg config.SlackConfig) Slack {
 }
 
 func (s impl) PostMessage(channel string, user config.SlackUser, message string) error {
-	params := slack.NewPostMessageParameters()
-
-	params.Username = user.Name
-	params.IconURL = user.IconUrl
-	params.IconEmoji = user.IconEmoji
+	params := slack.PostMessageParameters{
+		Username:  user.Name,
+		IconURL:   user.IconUrl,
+		IconEmoji: user.IconEmoji,
+	}
 
 	_, _, err := s.client.PostMessage(channel, message, params)
 

@@ -63,8 +63,17 @@ func (m match) get_messages() []Message {
 }
 
 func GetTextFromActivityItem(activity *atlassian.ActivityItem) string {
-	// strip name from start of title
+	// Strip name from start of title
 	re := regexp.MustCompile("^<a.+?</a>")
 	text := re.ReplaceAllString(activity.Title, "")
+
+	// Convert HTML links
+	re = regexp.MustCompile(`<a .*?href="(.+?)".*?>(.+?)</a>`)
+	text = re.ReplaceAllString(text, "<$1|$2>")
+
+	// Strip duplicate whitespace
+	re = regexp.MustCompile(" +")
+	text = re.ReplaceAllString(text, " ")
+
 	return text
 }
