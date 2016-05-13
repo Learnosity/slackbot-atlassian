@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"slackbot_atlassian/config"
-    "slackbot_atlassian/log"
+	"slackbot_atlassian/log"
 )
 
 // These types are lifted from https://github.com/plouc/go-jira-client/blob/master/jira.go
@@ -95,13 +95,13 @@ type ActivityFeed struct {
 }
 
 func (ai ActivityItem) GetIssueID() (string, bool) {
-    if ai.ActivityTarget != nil {
-        return ai.ActivityTarget.Title, true
-    }
-    if ai.ActivityObject != nil {
-        return ai.ActivityObject.Title, true
-    }
-    return "", false
+	if ai.ActivityTarget != nil {
+		return ai.ActivityTarget.Title, true
+	}
+	if ai.ActivityObject != nil {
+		return ai.ActivityObject.Title, true
+	}
+	return "", false
 }
 
 type Issue struct {
@@ -132,7 +132,7 @@ const (
 )
 
 func (a *atlassian) GetNewJiraActivities(last_id_seen string) ([]*ActivityItem, error) {
-    urlTemplate := "https://%s:%s@%s/activity?maxResults=%d&providers=%s"
+	urlTemplate := "https://%s:%s@%s/activity?maxResults=%d&providers=%s"
 
 	url := fmt.Sprintf(urlTemplate,
 		a.cfg.Auth.Username, a.cfg.Auth.Password, a.cfg.Host, a.cfg.MaxActivityLookup, atlassian_provider)
@@ -149,31 +149,31 @@ func (a *atlassian) GetNewJiraActivities(last_id_seen string) ([]*ActivityItem, 
 		return nil, err
 	}
 
-    // Reverse the order of the activities
-    entries := filterActivities(activities.Entries, last_id_seen)
+	// Reverse the order of the activities
+	entries := filterActivities(activities.Entries, last_id_seen)
 
-    // Only take up to the last id seen
-    return reverseActivities(entries), nil
+	// Only take up to the last id seen
+	return reverseActivities(entries), nil
 }
 
 func reverseActivities(a []*ActivityItem) []*ActivityItem {
-    //https://github.com/golang/go/wiki/SliceTricks#reversing
-    for left, right := 0, len(a)-1; left < right; left, right = left+1, right-1 {
-        a[left], a[right] = a[right], a[left]
-    }
-    return a
+	//https://github.com/golang/go/wiki/SliceTricks#reversing
+	for left, right := 0, len(a)-1; left < right; left, right = left+1, right-1 {
+		a[left], a[right] = a[right], a[left]
+	}
+	return a
 }
 
 func filterActivities(a []*ActivityItem, last_id_seen string) []*ActivityItem {
-    filter := make([]*ActivityItem, 0)
-    for _, item := range a {
-        if item.Id == last_id_seen {
-            log.LogF("Found last ID seen: %s", last_id_seen)
-            break
-        }
-        filter = append(filter, item)
-    }
-    return filter
+	filter := make([]*ActivityItem, 0)
+	for _, item := range a {
+		if item.Id == last_id_seen {
+			log.LogF("Found last ID seen: %s", last_id_seen)
+			break
+		}
+		filter = append(filter, item)
+	}
+	return filter
 }
 
 func (a *atlassian) GetIssue(issue_id string) (*Issue, error) {

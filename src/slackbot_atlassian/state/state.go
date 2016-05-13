@@ -13,7 +13,7 @@ import (
 const redis_state_key = "slackbot_atlassian_last_event"
 
 type Event struct {
-	Id            string `json:"id"`
+	Id string `json:"id"`
 }
 
 type State interface {

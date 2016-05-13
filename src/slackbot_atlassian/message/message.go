@@ -1,7 +1,7 @@
 package message
 
 import (
-    "fmt"
+	"fmt"
 	"regexp"
 
 	"slackbot_atlassian/atlassian"
@@ -89,7 +89,7 @@ func (m matcher) get_trigger_field_value(name string, activity_issue atlassian.A
 }
 
 type match struct {
-    users map[string]config.SlackUser
+	users          map[string]config.SlackUser
 	trigger        config.MessageTrigger
 	activity_issue atlassian.ActivityIssue
 }

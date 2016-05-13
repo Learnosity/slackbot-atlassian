@@ -73,7 +73,7 @@ func ProcessActivityStream(config *config.Config) error {
 
 	messages := matcher.GetMatchingMessages(config.Triggers, activity_issues...)
 
-    log.LogF("Posting %d messages to Slack", len(messages))
+	log.LogF("Posting %d messages to Slack", len(messages))
 	for _, m := range messages {
 		if err := slack_client.PostMessage(m.SlackChannel, m.AsUser, m.Text); err != nil {
 			return err
@@ -85,11 +85,11 @@ func ProcessActivityStream(config *config.Config) error {
 		lastEvent = state.Event{activities[len(activities)-1].Id}
 	}
 
-    log.LogF("Record last event in state DB: %v", lastEvent)
-    err = s.RecordLastEvent(lastEvent)
-    if err != nil {
-        return err
-    }
+	log.LogF("Record last event in state DB: %v", lastEvent)
+	err = s.RecordLastEvent(lastEvent)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
