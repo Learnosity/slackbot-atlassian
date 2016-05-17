@@ -36,6 +36,7 @@ To include the integration tests:
     gb test -tags integration all
 
 The integration tests assume that you have a Redis instance at `localhost:6379`.
+
 ## License
 
 Permissively MIT-licensed. See the LICENSE file.
