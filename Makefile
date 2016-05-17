@@ -1,5 +1,9 @@
 all: lint build
 
+devbuild: build
+
+prodbuild: build
+
 gofmt:
 	# run gofmt across all code to format in a standard way
 	gofmt -w src
