@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/Learnosity/slackbot-atlassian.svg?branch=master)](https://travis-ci.org/Learnosity/slackbot-atlassian)
 
+[![codecov](https://codecov.io/gh/Learnosity/slackbot-atlassian/branch/master/graph/badge.svg)](https://codecov.io/gh/Learnosity/slackbot-atlassian)
+
 Slackbot-Jira is a bot for [Slack](https://slack.com) that posts messages from a [Jira](https://www.atlassian.com/software/jira) activity feed.
 
 ## Usage
