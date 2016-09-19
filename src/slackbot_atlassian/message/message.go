@@ -3,6 +3,7 @@ package message
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"slackbot_atlassian/atlassian"
 	"slackbot_atlassian/config"
@@ -80,6 +81,13 @@ func (m matcher) get_trigger_field_value(name string, activity_issue atlassian.A
 			return value, ok, nil
 		case string:
 			return val.(string), true, nil
+		case []interface{}:
+			// For now we just join them all with strings
+			var strs []string
+			for _, v := range val.([]interface{}) {
+				strs = append(strs, fmt.Sprintf("%s", v))
+			}
+			return strings.Join(strs, ","), true, nil
 		default:
 			return "", false, fmt.Errorf("Wrong type for %s: want map or string, have %T", name, val)
 		}
