@@ -74,7 +74,7 @@ func ProcessActivityStream(config *config.Config) error {
 		if len(messages) != 0 {
 			log.LogF("Posting %d messages to Slack", len(messages))
 			for _, m := range messages {
-				if err := slack_client.PostMessage(m.SlackChannel, m.AsUser, m.Text); err != nil {
+				if err := slack_client.PostMessage(m.SlackChannel, m.AsUser, m.HtmlUnescapedText()); err != nil {
 					return err
 				}
 			}

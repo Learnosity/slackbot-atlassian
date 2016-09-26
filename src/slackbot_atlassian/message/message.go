@@ -2,6 +2,7 @@ package message
 
 import (
 	"fmt"
+	"html"
 	"regexp"
 	"strings"
 
@@ -14,6 +15,10 @@ type Message struct {
 	SlackChannel string
 	AsUser       config.SlackUser
 	Text         string
+}
+
+func (m Message) HtmlUnescapedText() string {
+	return html.UnescapeString(m.Text)
 }
 
 type MessageMatcher interface {
