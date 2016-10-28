@@ -77,22 +77,14 @@ func (m matcher) get_trigger_field_value(name string, activity_issue atlassian.A
 		} else if val == nil {
 			return "", false, nil
 		}
-		switch val.(type) {
+		switch vT := val.(type) {
 		case map[string]interface{}:
-			value, ok := val.(map[string]interface{})["value"].(string)
-			if !ok {
-				return "", false, fmt.Errorf("Wrong type for val inside %s: want string, have %T", name, val)
-			}
-			return value, ok, nil
+			return lookup_field_value_from_map(name, vT)
 		case string:
-			return val.(string), true, nil
+			return vT, true, nil
 		case []interface{}:
 			// For now we just join them all with strings
-			var strs []string
-			for _, v := range val.([]interface{}) {
-				strs = append(strs, fmt.Sprintf("%s", v))
-			}
-			return strings.Join(strs, ","), true, nil
+			return format_field_value_from_slice(vT), true, nil
 		default:
 			return "", false, fmt.Errorf("Wrong type for %s: want map or string, have %T", name, val)
 		}
@@ -110,6 +102,38 @@ func (m matcher) get_trigger_field_value(name string, activity_issue atlassian.A
 
 	// Now try with built-in fields
 	return lookup_field(name)
+}
+
+// get the field value from a generic map
+//
+// many jira fields are structured as an object, but different fields use
+// different keys for the value we care about.
+func lookup_field_value_from_map(name string, m map[string]interface{}) (string, bool, error) {
+	candidateKeys := []string{"value", "name"}
+
+	for _, k := range candidateKeys {
+		if v, ok := m[k]; ok {
+			// We have a value - try to convert it to string
+			vs, ok := v.(string)
+			if !ok {
+				return "", false, fmt.Errorf("Wrong type for val inside %s: want string, have %T", name, v)
+			}
+			return vs, true, nil
+		}
+	}
+
+	return "", false, nil
+}
+
+// some field values are JSON arrays, but we just want to work with them as a
+// string to keep the matching simple - so we join them up as strings with a
+// comma..
+func format_field_value_from_slice(s []interface{}) string {
+	var strs []string
+	for _, v := range s {
+		strs = append(strs, fmt.Sprintf("%s", v))
+	}
+	return strings.Join(strs, ",")
 }
 
 type match struct {
